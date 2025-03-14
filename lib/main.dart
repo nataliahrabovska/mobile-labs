@@ -47,7 +47,7 @@ class _HedgehogCounterState extends State<HedgehogCounter> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Бали за мобайл")),
+      appBar: AppBar(title: Text("Лічильник їжаків")),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
