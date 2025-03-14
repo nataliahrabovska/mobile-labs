@@ -1,4 +1,4 @@
-# lab1
+# mobile-labs
 
 A new Flutter project.
 
