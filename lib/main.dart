@@ -34,20 +34,39 @@ class LoginPage extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Image.asset('assets/images/logo.png', width: 300),
-              TextField(decoration: InputDecoration(hintText: 'Email', hintStyle: TextStyle(color: Color(0xFF292828)))),
-              TextField(obscureText: true, decoration: InputDecoration(hintText: 'Password', hintStyle: TextStyle(color: Color(0xFF292828)))),
+              TextField(
+                decoration: InputDecoration(
+                  hintText: 'Email',
+                  hintStyle: TextStyle(color: Color(0xFF292828)),
+                ),
+              ),
+              TextField(
+                obscureText: true,
+                decoration: InputDecoration(
+                  hintText: 'Password',
+                  hintStyle: TextStyle(color: Color(0xFF292828)),
+                ),
+              ),
               SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () => Navigator.pushNamed(context, '/home'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Color(0xFFFFBD59),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(25),
+                  ),
                 ),
-                child: Text('Login', style: TextStyle(color: Color(0xFF292828))),
+                child: Text(
+                  'Login',
+                  style: TextStyle(color: Color(0xFF292828)),
+                ),
               ),
               TextButton(
                 onPressed: () => Navigator.pushNamed(context, '/register'),
-                child: Text("Don't have an account? Sign up Here", style: TextStyle(color: Color(0xFF292828))),
+                child: Text(
+                  "Don't have an account? Sign up Here",
+                  style: TextStyle(color: Color(0xFF292828)),
+                ),
               ),
             ],
           ),
@@ -68,22 +87,46 @@ class RegisterPage extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Image.asset('assets/images/logo.png', width: 300),
-              TextField(decoration: InputDecoration(hintText: 'Email', hintStyle: TextStyle(color: Color(0xFF292828)))),
-              TextField(decoration: InputDecoration(hintText: 'Phone Number', hintStyle: TextStyle(color: Color(0xFF292828)))),
-              TextField(obscureText: true, decoration: InputDecoration(hintText: 'Password', hintStyle: TextStyle(color: Color(0xFF292828)))),
+              TextField(
+                decoration: InputDecoration(
+                  hintText: 'Email',
+                  hintStyle: TextStyle(color: Color(0xFF292828)),
+                ),
+              ),
+              TextField(
+                decoration: InputDecoration(
+                  hintText: 'Phone Number',
+                  hintStyle: TextStyle(color: Color(0xFF292828)),
+                ),
+              ),
+              TextField(
+                obscureText: true,
+                decoration: InputDecoration(
+                  hintText: 'Password',
+                  hintStyle: TextStyle(color: Color(0xFF292828)),
+                ),
+              ),
               SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () => Navigator.pushNamed(context, '/home'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Color(0xFFFFBD59),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(25),
+                  ),
                 ),
-                child: Text('Register', style: TextStyle(color: Color(0xFF292828))),
+                child: Text(
+                  'Register',
+                  style: TextStyle(color: Color(0xFF292828)),
+                ),
               ),
               TextButton(
-                  onPressed: () => Navigator.pushNamed(context, '/'),
-                  child: Text("Have an account? Sign in Here", style: TextStyle(color: Color(0xFF292828))),
-                  style:  TextButton.styleFrom()
+                onPressed: () => Navigator.pushNamed(context, '/'),
+                child: Text(
+                  "Have an account? Sign in Here",
+                  style: TextStyle(color: Color(0xFF292828)),
+                ),
+                style: TextButton.styleFrom(),
               ),
             ],
           ),
@@ -97,7 +140,10 @@ class ProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Profile'), backgroundColor: Color(0xFFF5E8CF)),
+      appBar: AppBar(
+        title: Text('Profile'),
+        backgroundColor: Color(0xFFF5E8CF),
+      ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -106,7 +152,12 @@ class ProfilePage extends StatelessWidget {
               onTap: () => print('Change Avatar'),
               child: CircleAvatar(radius: 50),
             ),
-            TextField(decoration: InputDecoration(hintText: 'User Name', hintStyle: TextStyle(color: Color(0xFF292828)))),
+            TextField(
+              decoration: InputDecoration(
+                hintText: 'User Name',
+                hintStyle: TextStyle(color: Color(0xFF292828)),
+              ),
+            ),
           ],
         ),
       ),
@@ -146,11 +197,21 @@ class HomePage extends StatelessWidget {
           Expanded(
             child: ListView.builder(
               itemCount: 20,
-              itemBuilder: (context, index) => ListTile(
-                title: Text('Location $index', style: TextStyle(color: Color(0xFF292828))),
-                subtitle: Text('Temp: 20°C, Humidity: 60%', style: TextStyle(color: Color(0xFF292828))),
-                trailing: Text('Date: 26/03/2025', style: TextStyle(color: Color(0xFF292828))),
-              ),
+              itemBuilder:
+                  (context, index) => ListTile(
+                    title: Text(
+                      'Location $index',
+                      style: TextStyle(color: Color(0xFF292828)),
+                    ),
+                    subtitle: Text(
+                      'Temp: 20°C, Humidity: 60%',
+                      style: TextStyle(color: Color(0xFF292828)),
+                    ),
+                    trailing: Text(
+                      'Date: 26/03/2025',
+                      style: TextStyle(color: Color(0xFF292828)),
+                    ),
+                  ),
             ),
           ),
           Padding(
@@ -160,10 +221,15 @@ class HomePage extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Color(0xFFFFBD59),
                 padding: EdgeInsets.symmetric(vertical: 15, horizontal: 40),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(25),
+                ),
                 textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-              child: Text('Add New Data', style: TextStyle(color: Color(0xFF292828))),
+              child: Text(
+                'Add New Data',
+                style: TextStyle(color: Color(0xFF292828)),
+              ),
             ),
           ),
         ],
@@ -176,14 +242,28 @@ class HomePage extends StatelessWidget {
       width: 120,
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color(0xFFFFBD59).withOpacity(0.6),
+        color: Color(0xFFFFBD59).withValues(alpha: (0.6 * 255)),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         children: [
-          Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF292828))),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF292828),
+            ),
+          ),
           SizedBox(height: 5),
-          Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF292828))),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF292828),
+            ),
+          ),
         ],
       ),
     );
