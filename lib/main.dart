@@ -142,23 +142,30 @@ class ProfilePage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('Profile'),
-        backgroundColor: Color(0xFFF5E8CF),
+        backgroundColor: Color(0xFFFFFCF6),
       ),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            GestureDetector(
-              onTap: () => print('Change Avatar'),
-              child: CircleAvatar(radius: 50),
-            ),
-            TextField(
-              decoration: InputDecoration(
-                hintText: 'User Name',
-                hintStyle: TextStyle(color: Color(0xFF292828)),
+        child: Padding(
+          padding: EdgeInsets.all(90),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              GestureDetector(
+                onTap: () => print('Change Avatar'),
+                child: CircleAvatar(
+                  radius: 50,
+                  backgroundImage: AssetImage('assets/images/profile_photo.png'),
+                ),
               ),
-            ),
-          ],
+              SizedBox(height: 10),
+              TextField(
+                decoration: InputDecoration(
+                  hintText: 'User Name',
+                  hintStyle: TextStyle(color: Color(0xFF292828)),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -170,24 +177,35 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: Color(0xFFFFFCF6),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            color: Color(0xFFFFFCF6),
+          ),
+        ),
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Image.asset('assets/images/logo_home.png', width: 120),
             GestureDetector(
               onTap: () => Navigator.pushNamed(context, '/profile'),
-              child: CircleAvatar(radius: 20),
+              child: CircleAvatar(
+                radius: 20,
+                backgroundImage: AssetImage('assets/images/profile_photo.png'),
+              ),
             ),
           ],
         ),
+        elevation: 0, // Запобігає зміні кольору при гортанні
+        toolbarOpacity: 1.0,
       ),
       body: Column(
         children: [
           Padding(
-            padding: EdgeInsets.all(10),
+            padding: EdgeInsets.symmetric(horizontal: 50, vertical: 10),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 _buildInfoCard('Avg Temp', '20°C'),
                 _buildInfoCard('Avg Humidity', '60%'),
@@ -196,22 +214,22 @@ class HomePage extends StatelessWidget {
           ),
           Expanded(
             child: ListView.builder(
+              physics: BouncingScrollPhysics(), // Змінено фізику прокручування
               itemCount: 20,
-              itemBuilder:
-                  (context, index) => ListTile(
-                    title: Text(
-                      'Location $index',
-                      style: TextStyle(color: Color(0xFF292828)),
-                    ),
-                    subtitle: Text(
-                      'Temp: 20°C, Humidity: 60%',
-                      style: TextStyle(color: Color(0xFF292828)),
-                    ),
-                    trailing: Text(
-                      'Date: 26/03/2025',
-                      style: TextStyle(color: Color(0xFF292828)),
-                    ),
-                  ),
+              itemBuilder: (context, index) => ListTile(
+                title: Text(
+                  'Location $index',
+                  style: TextStyle(color: Color(0xFF292828)),
+                ),
+                subtitle: Text(
+                  'Temp: 20°C, Humidity: 60%',
+                  style: TextStyle(color: Color(0xFF292828)),
+                ),
+                trailing: Text(
+                  'Date: 26/03/2025',
+                  style: TextStyle(color: Color(0xFF292828)),
+                ),
+              ),
             ),
           ),
           Padding(
@@ -222,7 +240,7 @@ class HomePage extends StatelessWidget {
                 backgroundColor: Color(0xFFFFBD59),
                 padding: EdgeInsets.symmetric(vertical: 15, horizontal: 40),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(25),
+                  borderRadius: BorderRadius.circular(15),
                 ),
                 textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
@@ -236,36 +254,37 @@ class HomePage extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _buildInfoCard(String title, String value) {
-    return Container(
-      width: 120,
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Color(0xFFFFBD59).withValues(alpha: (0.6 * 255)),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF292828),
-            ),
+Widget _buildInfoCard(String title, String value) {
+  return Container(
+    width: 200,
+    height: 90,
+    padding: EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: Color(0xFFFFBD59),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: Column(
+      children: [
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF292828),
           ),
-          SizedBox(height: 5),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF292828),
-            ),
+        ),
+        SizedBox(height: 5),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF292828),
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
 }

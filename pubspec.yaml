@@ -91,3 +91,4 @@ flutter:
   assets:
     - assets/images/logo.png
     - assets/images/logo_home.png
+    - assets/images/profile_photo.png
