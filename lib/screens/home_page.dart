@@ -1,7 +1,214 @@
 import 'package:flutter/material.dart';
 import '../widgets/info_card.dart';
+import '../models/sensor_data.dart';
+import '../services/local_storage.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  List<SensorData> dataList = [];
+  final storage = LocalStorageService();
+
+  @override
+  void initState() {
+    super.initState();
+    loadData();
+  }
+
+  Future<void> loadData() async {
+    final data = await storage.loadData();
+    setState(() {
+      dataList = data;
+    });
+  }
+
+  double get averageTemperature {
+    if (dataList.isEmpty) return 0.0;
+    final total = dataList
+        .map((d) => double.tryParse(d.temperature) ?? 0.0)
+        .reduce((a, b) => a + b);
+    return total / dataList.length;
+  }
+
+  double get averageHumidity {
+    if (dataList.isEmpty) return 0.0;
+    final total = dataList
+        .map((d) => double.tryParse(d.humidity) ?? 0.0)
+        .reduce((a, b) => a + b);
+    return total / dataList.length;
+  }
+
+  void _showAddDataDialog() {
+    final locationController = TextEditingController();
+    final tempController = TextEditingController();
+    final humidityController = TextEditingController();
+    final dateController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Color(0xFFFFFCF6),
+        title: Text('Add New Sensor Data'),
+        content: SingleChildScrollView(
+          child: Column(
+            children: [
+              _buildDialogTextField(locationController, 'Location'),
+              _buildDialogTextField(tempController, 'Temperature'),
+              _buildDialogTextField(humidityController, 'Humidity'),
+              _buildDialogTextField(dateController, 'Date (DD/MM/YYYY)'),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel', style: TextStyle(color: Color(0xFF292828))),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final newData = SensorData(
+                location: locationController.text,
+                temperature: tempController.text,
+                humidity: humidityController.text,
+                date: dateController.text,
+              );
+              await storage.addNewData(newData);
+              Navigator.pop(context);
+              await loadData();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Color(0xFFFFBD59),
+            ),
+            child: Text('Add', style: TextStyle(color: Color(0xFF292828))),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEditDataDialog(SensorData item) {
+    final locationController = TextEditingController(text: item.location);
+    final tempController = TextEditingController(text: item.temperature);
+    final humidityController = TextEditingController(text: item.humidity);
+    final dateController = TextEditingController(text: item.date);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Color(0xFFFFFCF6),
+        title: Text('Edit Sensor Data'),
+        content: SingleChildScrollView(
+          child: Column(
+            children: [
+              _buildDialogTextField(locationController, 'Location'),
+              _buildDialogTextField(tempController, 'Temperature'),
+              _buildDialogTextField(humidityController, 'Humidity'),
+              _buildDialogTextField(dateController, 'Date (DD/MM/YYYY)'),
+            ],
+          ),
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.grey,
+                    padding: EdgeInsets.symmetric(vertical: 15, horizontal: 30),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                  ),
+                  child: Text('Cancel', style: TextStyle(color: Colors.white)),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    await storage.deleteData(item);
+                    final updatedData = SensorData(
+                      location: locationController.text,
+                      temperature: tempController.text,
+                      humidity: humidityController.text,
+                      date: dateController.text,
+                    );
+                    await storage.addNewData(updatedData);
+                    Navigator.pop(context);
+                    await loadData();
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Дані оновлено')),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFFFFBD59),
+                    padding: EdgeInsets.symmetric(vertical: 15, horizontal: 30),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                  ),
+                  child: Text('Update', style: TextStyle(color: Color(0xFF292828))),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteConfirmationDialog(SensorData item) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Color(0xFFFFFCF6),
+        title: Text('Delete Sensor Data'),
+        content: Text('Are you sure you want to delete this data?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel', style: TextStyle(color: Color(0xFF292828))),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              await storage.deleteData(item);
+              Navigator.pop(context);
+              await loadData();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Color(0xFFFFBD59),
+            ),
+            child: Text('Delete', style: TextStyle(color: Color(0xFF292828))),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDialogTextField(TextEditingController controller, String hint) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: TextField(
+        controller: controller,
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: TextStyle(color: Color(0xFF292828)),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          filled: true,
+          fillColor: Colors.white,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -30,8 +237,8 @@ class HomePage extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                InfoCard(title: 'Avg Temp', value: '20°C'),
-                InfoCard(title: 'Avg Humidity', value: '60%'),
+                InfoCard(title: 'Avg Temp', value: '${averageTemperature.toStringAsFixed(1)}°C'),
+                InfoCard(title: 'Avg Humidity', value: '${averageHumidity.toStringAsFixed(1)}%'),
               ],
             ),
           ),
@@ -40,28 +247,37 @@ class HomePage extends StatelessWidget {
               color: Color(0xFFFFFCF6),
               child: ListView.builder(
                 physics: BouncingScrollPhysics(),
-                itemCount: 20,
-                itemBuilder: (context, index) => ListTile(
-                  title: Text(
-                    'Location ${index + 1}',
-                    style: TextStyle(color: Color(0xFF292828)),
-                  ),
-                  subtitle: Text(
-                    'Temp: 20°C, Humidity: 60%',
-                    style: TextStyle(color: Color(0xFF292828)),
-                  ),
-                  trailing: Text(
-                    'Date: 26/03/2025',
-                    style: TextStyle(color: Color(0xFF292828)),
-                  ),
-                ),
+                itemCount: dataList.length,
+                itemBuilder: (context, index) {
+                  final item = dataList[index];
+                  return ListTile(
+                    title: Text(item.location, style: TextStyle(color: Color(0xFF292828))),
+                    subtitle: Text(
+                      'Temp: ${item.temperature}, Humidity: ${item.humidity}',
+                      style: TextStyle(color: Color(0xFF292828)),
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: Icon(Icons.edit, color: Color(0xFF292828)),
+                          onPressed: () => _showEditDataDialog(item),
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.delete, color: Color(0xFF292828)),
+                          onPressed: () => _showDeleteConfirmationDialog(item),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
             ),
           ),
           Padding(
             padding: EdgeInsets.all(20),
             child: ElevatedButton(
-              onPressed: () => print('Add Data'),
+              onPressed: _showAddDataDialog,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Color(0xFFFFBD59),
                 padding: EdgeInsets.symmetric(vertical: 15, horizontal: 40),
@@ -70,10 +286,7 @@ class HomePage extends StatelessWidget {
                 ),
                 textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-              child: Text(
-                'Add New Data',
-                style: TextStyle(color: Color(0xFF292828)),
-              ),
+              child: Text('Add New Data', style: TextStyle(color: Color(0xFF292828))),
             ),
           ),
         ],
