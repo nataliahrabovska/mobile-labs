@@ -1,17 +1,19 @@
 import 'dart:convert';
-import 'package:web/web.dart' as web;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/sensor_data.dart';
 
 class LocalStorageService {
   static const String key = 'sensor_data';
 
   Future<void> saveData(List<SensorData> data) async {
+    final prefs = await SharedPreferences.getInstance();
     final jsonData = jsonEncode(data.map((e) => e.toJson()).toList());
-    web.window.localStorage.setItem(key, jsonData);
+    await prefs.setString(key, jsonData);
   }
 
   Future<List<SensorData>> loadData() async {
-    final jsonString = web.window.localStorage.getItem(key);
+    final prefs = await SharedPreferences.getInstance();
+    final jsonString = prefs.getString(key);
     if (jsonString == null) return [];
     final List decoded = jsonDecode(jsonString);
     return decoded.map((e) => SensorData.fromJson(e)).toList();

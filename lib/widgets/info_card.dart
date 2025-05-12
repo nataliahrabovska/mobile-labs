@@ -9,9 +9,9 @@ class InfoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 200,
-      height: 90,
-      padding: EdgeInsets.all(16),
+      width: 127,
+      height: 62,
+      padding: EdgeInsets.all(5),
       decoration: BoxDecoration(
         color: Color(0xFFFFBD59),
         borderRadius: BorderRadius.circular(12),
@@ -21,7 +21,7 @@ class InfoCard extends StatelessWidget {
           Text(
             title,
             style: TextStyle(
-              fontSize: 16,
+              fontSize: 17,
               fontWeight: FontWeight.bold,
               color: Color(0xFF292828),
             ),
@@ -30,7 +30,7 @@ class InfoCard extends StatelessWidget {
           Text(
             value,
             style: TextStyle(
-              fontSize: 20,
+              fontSize: 16,
               fontWeight: FontWeight.bold,
               color: Color(0xFF292828),
             ),
