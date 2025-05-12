@@ -1,12 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginPage extends StatelessWidget {
+  Future<void> _login(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isLoggedIn', true);
+
+    Navigator.pushReplacementNamed(context, '/home');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
         child: Padding(
-          padding: EdgeInsets.all(90),
+          padding: EdgeInsets.symmetric(horizontal: 30),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -14,7 +22,7 @@ class LoginPage extends StatelessWidget {
               _buildTextField('Email'),
               _buildTextField('Password', obscureText: true),
               SizedBox(height: 20),
-              _buildButton('Login', () => Navigator.pushNamed(context, '/home')),
+              _buildButton('Login', () => _login(context)),
               TextButton(
                 onPressed: () => Navigator.pushNamed(context, '/register'),
                 child: Text(
