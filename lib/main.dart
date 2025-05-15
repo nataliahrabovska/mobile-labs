@@ -1,24 +1,35 @@
 import 'package:flutter/material.dart';
-import 'screens/login_page.dart';
-import 'screens/register_page.dart';
-import 'screens/profile_page.dart';
-import 'screens/home_page.dart';
-import 'theme/app_theme.dart';
+import 'package:test_lab2/screens/login_page.dart';
+import 'package:test_lab2/screens/profile_page.dart';
+import 'package:test_lab2/screens/register_page.dart';
+import 'services/auth_service.dart';
+import 'package:test_lab2/screens/home_page.dart'; // додайте цей рядок
 
-void main() => runApp(GrainDocApp());
 
-class GrainDocApp extends StatelessWidget {
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  final AuthService _authService = AuthService();
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'GrainDoc',
-      theme: AppTheme.lightTheme,
-      initialRoute: '/',
+      title: 'Sensor App',
+      theme: ThemeData(fontFamily: 'Roboto'),
       routes: {
-        '/': (context) => LoginPage(),
+        '/': (context) => FutureBuilder<bool>(
+          future: _authService.isLoggedIn(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) return SizedBox(); // splash screen
+            return snapshot.data! ? HomePage() : LoginPage();
+          },
+        ),
+        '/login': (context) => LoginPage(),
+        '/home': (context) => HomePage(),
         '/register': (context) => RegisterPage(),
         '/profile': (context) => ProfilePage(),
-        '/home': (context) => HomePage(),
       },
     );
   }

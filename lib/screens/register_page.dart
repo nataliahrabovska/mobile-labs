@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/auth_service.dart'; // шлях змінюй відповідно до структури
 
 class RegisterPage extends StatefulWidget {
   @override
@@ -8,8 +9,8 @@ class RegisterPage extends StatefulWidget {
 class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
   String email = '';
-  String phone = '';
   String password = '';
+  final AuthService _authService = AuthService();
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +27,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Image.asset('assets/images/logo.png', width: 90),
+                      Image.asset('assets/images/logo.png', width: 200),
                       SizedBox(height: 20),
                       TextFormField(
                         decoration: InputDecoration(hintText: 'Email'),
@@ -36,18 +37,6 @@ class _RegisterPageState extends State<RegisterPage> {
                           return null;
                         },
                         onChanged: (value) => email = value,
-                      ),
-                      SizedBox(height: 16),
-                      TextFormField(
-                        decoration: InputDecoration(hintText: 'Phone Number'),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) return 'Enter phone';
-                          if (!RegExp(r'^\+?[0-9]{7,}$').hasMatch(value)) {
-                            return 'Enter valid phone';
-                          }
-                          return null;
-                        },
-                        onChanged: (value) => phone = value,
                       ),
                       SizedBox(height: 16),
                       TextFormField(
@@ -62,9 +51,10 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                       SizedBox(height: 30),
                       ElevatedButton(
-                        onPressed: () {
+                        onPressed: () async {
                           if (_formKey.currentState!.validate()) {
-                            Navigator.pushNamed(context, '/home');
+                            await _authService.register(email, password);
+                            Navigator.pushReplacementNamed(context, '/home');
                           }
                         },
                         style: ElevatedButton.styleFrom(
@@ -79,9 +69,9 @@ class _RegisterPageState extends State<RegisterPage> {
                         ),
                       ),
                       TextButton(
-                        onPressed: () => Navigator.pushNamed(context, '/'),
+                        onPressed: () => Navigator.pop(context),
                         child: Text(
-                          "Have an account? Sign in Here",
+                          "Already have an account? Login Here",
                           style: TextStyle(color: Color(0xFF292828)),
                         ),
                       ),

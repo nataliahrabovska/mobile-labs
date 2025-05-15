@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/auth_service.dart'; // Переконайся, що шлях правильний
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -7,6 +8,7 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   final TextEditingController _nameController = TextEditingController();
+  final AuthService _authService = AuthService();
 
   @override
   void dispose() {
@@ -20,6 +22,31 @@ class _ProfilePageState extends State<ProfilePage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Profile saved')),
     );
+  }
+
+  Future<void> _confirmLogout() async {
+    final shouldLogout = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Log out'),
+        content: Text('Are you sure you want to log out?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text('Log out'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldLogout == true) {
+      await _authService.logout();
+      Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false); // це правильно
+    }
   }
 
   @override
@@ -69,6 +96,20 @@ class _ProfilePageState extends State<ProfilePage> {
                 child: Text(
                   'Save',
                   style: TextStyle(color: Color(0xFF292828)),
+                ),
+              ),
+              SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _confirmLogout,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.redAccent,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(25),
+                  ),
+                ),
+                child: Text(
+                  'Log out',
+                  style: TextStyle(color: Colors.white),
                 ),
               ),
             ],

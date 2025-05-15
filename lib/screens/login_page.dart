@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/auth_service.dart'; // шляхи можуть змінюватися в залежності від структури проєкту
 
 class LoginPage extends StatefulWidget {
   @override
@@ -9,6 +10,7 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   String email = '';
   String password = '';
+  final AuthService _authService = AuthService();
 
   @override
   Widget build(BuildContext context) {
@@ -49,9 +51,10 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       SizedBox(height: 30),
                       ElevatedButton(
-                        onPressed: () {
+                        onPressed: () async {
                           if (_formKey.currentState!.validate()) {
-                            Navigator.pushNamed(context, '/home');
+                            await _authService.login(email, password);
+                            Navigator.pushReplacementNamed(context, '/home');
                           }
                         },
                         style: ElevatedButton.styleFrom(
