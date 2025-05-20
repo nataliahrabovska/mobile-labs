@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../widgets/info_card.dart';
 import '../models/sensor_data.dart';
 import '../services/local_storage.dart';
+import 'dart:async';
+import 'dart:math';
 
 class HomePage extends StatefulWidget {
   @override
@@ -11,19 +13,68 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   List<SensorData> dataList = [];
   final storage = LocalStorageService();
+  Timer? _updateTimer;
 
   @override
   void initState() {
     super.initState();
     loadData();
+    startDataUpdateTimer();
+  }
+
+  @override
+  void dispose() {
+    _updateTimer?.cancel();
+    super.dispose();
+  }
+
+  void startDataUpdateTimer() {
+    _updateTimer = Timer.periodic(Duration(seconds: 10), (_) {
+      updateRandomly();
+    });
+  }
+
+  void updateRandomly() async {
+    final random = Random();
+    final updatedList = dataList.map((data) {
+      double temp = double.tryParse(data.temperature) ?? 25.0;
+      double hum = double.tryParse(data.humidity) ?? 50.0;
+
+      temp += (random.nextDouble() * 3 - 1.5);
+      hum += (random.nextDouble() * 3 - 1.5);
+
+      temp = temp.clamp(15.0, 35.0);
+      hum = hum.clamp(30.0, 80.0);
+
+      return SensorData(
+        location: data.location,
+        temperature: temp.toStringAsFixed(1),
+        humidity: hum.toStringAsFixed(1),
+        date: DateTime.now().toString().substring(0, 10),
+      );
+    }).toList();
+
+    await storage.saveData(updatedList);
+    setState(() {
+      dataList = updatedList;
+    });
   }
 
   Future<void> loadData() async {
     final data = await storage.loadData();
-    setState(() {
-      dataList = data;
-    });
+    if (data.isEmpty) {
+      final randomData = List.generate(10, (_) => generateRandomSensorData());
+      await storage.saveData(randomData);
+      setState(() {
+        dataList = randomData;
+      });
+    } else {
+      setState(() {
+        dataList = data;
+      });
+    }
   }
+
 
   double get averageTemperature {
     if (dataList.isEmpty) return 0.0;
@@ -162,6 +213,24 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+
+  SensorData generateRandomSensorData() {
+    final random = Random();
+    final locations = ['Bin A', 'Bin B', 'Bin C', 'Warehouse', 'Storage 1'];
+    final location = locations[random.nextInt(locations.length)];
+
+    final temperature = (18 + random.nextDouble() * 12).toStringAsFixed(1); // 18.0–30.0 °C
+    final humidity = (40 + random.nextDouble() * 30).toStringAsFixed(1);   // 40–70 %
+    final date = DateTime.now().toString().substring(0, 10); // YYYY-MM-DD
+
+    return SensorData(
+      location: location,
+      temperature: temperature,
+      humidity: humidity,
+      date: date,
+    );
+  }
+
 
   void _showDeleteConfirmationDialog(SensorData item) {
     showDialog(
