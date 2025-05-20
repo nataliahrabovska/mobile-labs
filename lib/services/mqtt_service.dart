@@ -4,10 +4,10 @@ import 'package:mqtt_client/mqtt_server_client.dart';
 import '../models/sensor_data.dart';
 
 class MqttService {
-  final _client = MqttServerClient('broker.hivemq.com', 'grainDocClient')
+  final _client = MqttServerClient('test.mosquitto.org', 'grainDocClient')
     ..port = 1883
-    ..logging(on: true)  // Включаємо логування для детальної перевірки
-    ..keepAlivePeriod = 20;
+    ..logging(on: true)
+    ..keepAlivePeriod = 60;
 
   Function(SensorData)? onDataReceived;
   Function()? onDisconnected;
@@ -21,7 +21,6 @@ class MqttService {
       _client.onSubscribed = _onSubscribed;
 
       final connMess = MqttConnectMessage()
-          .withClientIdentifier('grainDocClient')
           .startClean()
           .withWillQos(MqttQos.atLeastOnce);
 
@@ -30,33 +29,42 @@ class MqttService {
       await _client.connect();
 
       if (_client.connectionStatus!.state == MqttConnectionState.connected) {
-        print('MQTT connected');
+        print('MQTT connected successfully');
+
         _client.subscribe('grainDoc/sensor', MqttQos.atLeastOnce);
 
-        _client.updates?.listen((List<MqttReceivedMessage<MqttMessage>> messages) {
-          final recMess = messages[0].payload as MqttPublishMessage;
-          final payload = MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
+        _client.updates?.listen(
+              (List<MqttReceivedMessage<MqttMessage>> messages) {
+            if (!_isConnected) {
+              print('MQTT client is disconnected, ignoring messages.');
+              return;
+            }
+            final recMess = messages[0].payload as MqttPublishMessage;
+            final payloadString = MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
+            print('Received message (raw): $payloadString');
+            try {
+              final jsonData = jsonDecode(payloadString);
+              if (jsonData is Map<String, dynamic>) {
+                final data = SensorData.fromJson(jsonData);
+                onDataReceived?.call(data);
+              }
+            } catch (e) {
+              print('JSON decode error: $e');
+            }
+          },
+          onError: (error) => print('MQTT stream error: $error'),
+          onDone: () => print('MQTT stream closed'),
+        );
 
-          print('Received message: $payload');  // Лог для перевірки отриманого повідомлення
-
-          try {
-            final Map<String, dynamic> json = jsonDecode(payload);
-            final data = SensorData.fromJson(json);
-            print('Decoded data: ${data.toJson()}');  // Лог для перевірки декодованих даних
-            onDataReceived?.call(data);
-          } catch (e) {
-            print('MQTT JSON decode error: $e');
-          }
-        });
       } else {
-        print('MQTT connection failed');
+        print('MQTT connection failed - status: ${_client.connectionStatus}');
       }
 
-      _isConnected = true;
+      _isConnected = _client.connectionStatus!.state == MqttConnectionState.connected;
     } catch (e) {
       print('MQTT error: $e');
       _isConnected = false;
-      disconnect();  // Disconnect if connection fails
+      disconnect();
     }
   }
 
@@ -64,23 +72,26 @@ class MqttService {
     if (_isConnected) {
       _client.disconnect();
       _isConnected = false;
+      print('MQTT disconnected');
     }
   }
+
+
 
   bool get isConnected => _isConnected;
 
   void _handleDisconnected() {
-    print('MQTT disconnected');
+    print('MQTT disconnected callback');
     _isConnected = false;
     onDisconnected?.call();
   }
 
   void _handleConnected() {
-    print('MQTT connected');
+    print('MQTT connected callback');
     onConnected?.call();
   }
 
   void _onSubscribed(String topic) {
-    print('Subscribed to $topic');
+    print('Subscribed to topic: $topic');
   }
 }

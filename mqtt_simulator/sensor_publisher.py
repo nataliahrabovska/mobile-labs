@@ -4,7 +4,7 @@ import json
 import paho.mqtt.client as mqtt
 
 BROKER_ADDRESS = "test.mosquitto.org"
-TOPIC = "graindoc/sensor"
+TOPIC = "grainDoc/sensor"
 
 def generate_data():
     return {

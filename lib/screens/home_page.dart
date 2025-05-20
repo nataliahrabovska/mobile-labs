@@ -37,7 +37,7 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _sensorData = data;
     });
-    print('Data received: ${data.toJson()}');  // Лог для перевірки отриманих даних
+    print('Data received: ${data.toJson()}');
   }
 
   @override
@@ -61,7 +61,7 @@ class _HomePageState extends State<HomePage> {
             Text('Sensor Data:', style: TextStyle(fontSize: 24)),
             Text('Temperature: ${_sensorData!.temperature} °C', style: TextStyle(fontSize: 18)),
             Text('Humidity: ${_sensorData!.humidity} %', style: TextStyle(fontSize: 18)),
-            Text('Date: ${_sensorData!.date}', style: TextStyle(fontSize: 18)),
+            Text('Date: ${_sensorData!.timestamp}', style: TextStyle(fontSize: 18)),
           ],
         ),
       ),
