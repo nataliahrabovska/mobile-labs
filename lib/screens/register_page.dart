@@ -54,9 +54,11 @@ class _RegisterPageState extends State<RegisterPage> {
                         onPressed: () async {
                           if (_formKey.currentState!.validate()) {
                             await _authService.register(email, password);
+                            await _authService.login(email, password); // автоматичний логін після реєстрації
                             Navigator.pushReplacementNamed(context, '/home');
                           }
                         },
+
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Color(0xFFFFBD59),
                           shape: RoundedRectangleBorder(

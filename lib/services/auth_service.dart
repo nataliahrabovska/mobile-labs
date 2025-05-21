@@ -31,7 +31,5 @@ class AuthService {
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_keyLoggedIn, false);
-    // або для повного очищення:
-    // await prefs.clear();
   }
 }

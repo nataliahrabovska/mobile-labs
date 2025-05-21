@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../services/auth_service.dart'; // шляхи можуть змінюватися в залежності від структури проєкту
+import '../services/auth_service.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -53,8 +53,14 @@ class _LoginPageState extends State<LoginPage> {
                       ElevatedButton(
                         onPressed: () async {
                           if (_formKey.currentState!.validate()) {
-                            await _authService.login(email, password);
-                            Navigator.pushReplacementNamed(context, '/home');
+                            final success = await _authService.login(email, password);
+                            if (success) {
+                              Navigator.pushReplacementNamed(context, '/home');
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Invalid email or password')),
+                              );
+                            }
                           }
                         },
                         style: ElevatedButton.styleFrom(

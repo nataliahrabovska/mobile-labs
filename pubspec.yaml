@@ -11,7 +11,7 @@ dependencies:
   flutter:
     sdk: flutter
   mqtt_client: ^10.0.0
-  connectivity_plus: ^6.0.3
+  connectivity_plus: ^4.0.1
   shared_preferences: ^2.2.2
 
 dev_dependencies:

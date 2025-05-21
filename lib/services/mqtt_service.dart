@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import '../models/sensor_data.dart';
 
 class MqttService {
@@ -14,7 +15,17 @@ class MqttService {
   Function()? onConnected;
   bool _isConnected = false;
 
+  Future<bool> _checkInternetConnection() async {
+    var connectivityResult = await Connectivity().checkConnectivity();
+    return connectivityResult != ConnectivityResult.none;
+  }
+
   Future<void> connect() async {
+    if (!await _checkInternetConnection()) {
+      print('No internet connection. Cannot connect to MQTT.');
+      return;
+    }
+
     try {
       _client.onConnected = _handleConnected;
       _client.onDisconnected = _handleDisconnected;
@@ -40,7 +51,8 @@ class MqttService {
               return;
             }
             final recMess = messages[0].payload as MqttPublishMessage;
-            final payloadString = MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
+            final payloadString =
+            MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
             print('Received message (raw): $payloadString');
             try {
               final jsonData = jsonDecode(payloadString);
@@ -55,7 +67,6 @@ class MqttService {
           onError: (error) => print('MQTT stream error: $error'),
           onDone: () => print('MQTT stream closed'),
         );
-
       } else {
         print('MQTT connection failed - status: ${_client.connectionStatus}');
       }
@@ -75,8 +86,6 @@ class MqttService {
       print('MQTT disconnected');
     }
   }
-
-
 
   bool get isConnected => _isConnected;
 
