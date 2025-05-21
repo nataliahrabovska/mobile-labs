@@ -1,65 +1,85 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-class LoginPage extends StatelessWidget {
-  Future<void> _login(BuildContext context) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('isLoggedIn', true);
+class LoginPage extends StatefulWidget {
+  @override
+  _LoginPageState createState() => _LoginPageState();
+}
 
-    Navigator.pushReplacementNamed(context, '/home');
-  }
+class _LoginPageState extends State<LoginPage> {
+  final _formKey = GlobalKey<FormState>();
+  String email = '';
+  String password = '';
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 30),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset('assets/images/logo.png', width: 300),
-              _buildTextField('Email'),
-              _buildTextField('Password', obscureText: true),
-              SizedBox(height: 20),
-              _buildButton('Login', () => _login(context)),
-              TextButton(
-                onPressed: () => Navigator.pushNamed(context, '/register'),
-                child: Text(
-                  "Don't have an account? Sign up Here",
-                  style: TextStyle(color: Color(0xFF292828)),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            padding: EdgeInsets.symmetric(horizontal: 30, vertical: 50),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: IntrinsicHeight(
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Image.asset('assets/images/logo.png', width: 200),
+                      SizedBox(height: 20),
+                      TextFormField(
+                        decoration: InputDecoration(hintText: 'Email'),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) return 'Enter email';
+                          if (!value.contains('@')) return 'Enter valid email';
+                          return null;
+                        },
+                        onChanged: (value) => email = value,
+                      ),
+                      SizedBox(height: 16),
+                      TextFormField(
+                        obscureText: true,
+                        decoration: InputDecoration(hintText: 'Password'),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) return 'Enter password';
+                          if (value.length < 6) return 'Password too short';
+                          return null;
+                        },
+                        onChanged: (value) => password = value,
+                      ),
+                      SizedBox(height: 30),
+                      ElevatedButton(
+                        onPressed: () {
+                          if (_formKey.currentState!.validate()) {
+                            Navigator.pushNamed(context, '/home');
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color(0xFFFFBD59),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(25),
+                          ),
+                        ),
+                        child: Text(
+                          'Login',
+                          style: TextStyle(color: Color(0xFF292828)),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.pushNamed(context, '/register'),
+                        child: Text(
+                          "Don't have an account? Sign up Here",
+                          style: TextStyle(color: Color(0xFF292828)),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
     );
   }
-}
-
-Widget _buildTextField(String hint, {bool obscureText = false}) {
-  return TextField(
-    obscureText: obscureText,
-    decoration: InputDecoration(
-      hintText: hint,
-      hintStyle: TextStyle(color: Color(0xFF292828)),
-    ),
-  );
-}
-
-Widget _buildButton(String text, VoidCallback onPressed) {
-  return ElevatedButton(
-    onPressed: onPressed,
-    style: ElevatedButton.styleFrom(
-      backgroundColor: Color(0xFFFFBD59),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(25),
-      ),
-    ),
-    child: Text(
-      text,
-      style: TextStyle(color: Color(0xFF292828)),
-    ),
-  );
 }

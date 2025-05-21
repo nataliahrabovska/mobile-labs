@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'login_page.dart'; // для переходу на login після logout
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -10,20 +8,17 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   final TextEditingController _nameController = TextEditingController();
 
-  void _saveName() {
-    final name = _nameController.text;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Name saved: $name')),
-    );
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
   }
 
-  Future<void> _logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
-
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => LoginPage()),
+  void _saveProfile() {
+    final name = _nameController.text;
+    print('Saved name: $name');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Profile saved')),
     );
   }
 
@@ -31,18 +26,14 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Profile'),
+        title: Text('Profile', style: TextStyle(color: Color(0xFF292828))),
         backgroundColor: Color(0xFFFFFCF6),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.logout, color: Color(0xFF292828)),
-            onPressed: _logout,
-          ),
-        ],
+        iconTheme: IconThemeData(color: Color(0xFF292828)),
+        elevation: 0,
       ),
       body: Center(
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 30),
+        child: SingleChildScrollView(
+          padding: EdgeInsets.all(30),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -53,11 +44,22 @@ class _ProfilePageState extends State<ProfilePage> {
                   backgroundImage: AssetImage('assets/images/profile_photo.png'),
                 ),
               ),
-              SizedBox(height: 10),
-              _buildTextField('User Name', _nameController),
               SizedBox(height: 20),
+              TextField(
+                controller: _nameController,
+                decoration: InputDecoration(
+                  hintText: 'User Name',
+                  hintStyle: TextStyle(color: Color(0xFF292828)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(25),
+                  ),
+                  filled: true,
+                  fillColor: Colors.white,
+                ),
+              ),
+              SizedBox(height: 30),
               ElevatedButton(
-                onPressed: _saveName,
+                onPressed: _saveProfile,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Color(0xFFFFBD59),
                   shape: RoundedRectangleBorder(
@@ -75,14 +77,4 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
-}
-
-Widget _buildTextField(String hint, TextEditingController controller) {
-  return TextField(
-    controller: controller,
-    decoration: InputDecoration(
-      hintText: hint,
-      hintStyle: TextStyle(color: Color(0xFF292828)),
-    ),
-  );
 }
