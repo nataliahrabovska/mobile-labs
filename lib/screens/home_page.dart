@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import '../widgets/info_card.dart';
 import '../models/sensor_data.dart';
 import '../services/local_storage.dart';
-import 'dart:async';
-import 'dart:math';
+import '../services/mqtt_service.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -13,85 +12,65 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   List<SensorData> dataList = [];
   final storage = LocalStorageService();
-  Timer? _updateTimer;
+  final MqttService _mqttService = MqttService();
 
   @override
   void initState() {
     super.initState();
+    _mqttService.onDataReceived = _onDataReceived;
+    _connectToMqtt();
     loadData();
-    startDataUpdateTimer();
-  }
-
-  @override
-  void dispose() {
-    _updateTimer?.cancel();
-    super.dispose();
-  }
-
-  void startDataUpdateTimer() {
-    _updateTimer = Timer.periodic(Duration(seconds: 10), (_) {
-      updateRandomly();
-    });
-  }
-
-  void updateRandomly() async {
-    final random = Random();
-    final updatedList = dataList.map((data) {
-      double temp = double.tryParse(data.temperature) ?? 25.0;
-      double hum = double.tryParse(data.humidity) ?? 50.0;
-
-      temp += (random.nextDouble() * 3 - 1.5);
-      hum += (random.nextDouble() * 3 - 1.5);
-
-      temp = temp.clamp(15.0, 35.0);
-      hum = hum.clamp(30.0, 80.0);
-
-      return SensorData(
-        location: data.location,
-        temperature: temp.toStringAsFixed(1),
-        humidity: hum.toStringAsFixed(1),
-        date: DateTime.now().toString().substring(0, 10),
-      );
-    }).toList();
-
-    await storage.saveData(updatedList);
-    setState(() {
-      dataList = updatedList;
-    });
   }
 
   Future<void> loadData() async {
     final data = await storage.loadData();
-    if (data.isEmpty) {
-      final randomData = List.generate(10, (_) => generateRandomSensorData());
-      await storage.saveData(randomData);
-      setState(() {
-        dataList = randomData;
-      });
-    } else {
-      setState(() {
-        dataList = data;
-      });
+    setState(() {
+      dataList = data;
+    });
+  }
+
+  void _connectToMqtt() async {
+    try {
+      print('Connecting to MQTT...');
+      await _mqttService.connect();
+      if (_mqttService.isConnected) {
+        print('MQTT Connected');
+      } else {
+        print('MQTT connection failed');
+      }
+    } catch (e) {
+      print('Error connecting to MQTT: $e');
     }
   }
 
+  void _onDataReceived(SensorData newData) async {
+    bool exists = dataList.any((d) =>
+    d.timestamp == newData.timestamp && d.location == newData.location
+    );
+    if (!exists) {
+      setState(() {
+        dataList.add(newData);
+      });
+      await storage.addNewData(newData);
+      print('New MQTT data added: ${newData.toJson()}');
+    } else {
+      print('MQTT data already exists, skipping');
+    }
+  }
 
   double get averageTemperature {
     if (dataList.isEmpty) return 0.0;
-    final total = dataList
-        .map((d) => double.tryParse(d.temperature) ?? 0.0)
-        .reduce((a, b) => a + b);
+    final total = dataList.map((d) => d.temperature).reduce((a, b) => a + b);
     return total / dataList.length;
   }
 
   double get averageHumidity {
     if (dataList.isEmpty) return 0.0;
-    final total = dataList
-        .map((d) => double.tryParse(d.humidity) ?? 0.0)
-        .reduce((a, b) => a + b);
+    final total = dataList.map((d) => d.humidity).reduce((a, b) => a + b);
     return total / dataList.length;
   }
 
+  // Створюємо контролери та не забуваємо їх dispose
   void _showAddDataDialog() {
     final locationController = TextEditingController();
     final tempController = TextEditingController();
@@ -109,26 +88,38 @@ class _HomePageState extends State<HomePage> {
               _buildDialogTextField(locationController, 'Location'),
               _buildDialogTextField(tempController, 'Temperature'),
               _buildDialogTextField(humidityController, 'Humidity'),
-              _buildDialogTextField(dateController, 'Date (DD/MM/YYYY)'),
+              _buildDialogTextField(dateController, 'Date (DD/MM/YYYY HH:mm:ss)'),
             ],
           ),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              locationController.dispose();
+              tempController.dispose();
+              humidityController.dispose();
+              dateController.dispose();
+              Navigator.pop(context);
+            },
             child: Text('Cancel', style: TextStyle(color: Color(0xFF292828))),
           ),
           ElevatedButton(
             onPressed: () async {
               final newData = SensorData(
                 location: locationController.text,
-                temperature: tempController.text,
-                humidity: humidityController.text,
-                date: dateController.text,
+                temperature: double.tryParse(tempController.text) ?? 0.0,
+                humidity: double.tryParse(humidityController.text) ?? 0.0,
+                timestamp: dateController.text,
               );
               await storage.addNewData(newData);
+              setState(() {
+                dataList.add(newData);
+              });
+              locationController.dispose();
+              tempController.dispose();
+              humidityController.dispose();
+              dateController.dispose();
               Navigator.pop(context);
-              await loadData();
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Color(0xFFFFBD59),
@@ -142,9 +133,9 @@ class _HomePageState extends State<HomePage> {
 
   void _showEditDataDialog(SensorData item) {
     final locationController = TextEditingController(text: item.location);
-    final tempController = TextEditingController(text: item.temperature);
-    final humidityController = TextEditingController(text: item.humidity);
-    final dateController = TextEditingController(text: item.date);
+    final tempController = TextEditingController(text: item.temperature.toString());
+    final humidityController = TextEditingController(text: item.humidity.toString());
+    final dateController = TextEditingController(text: item.timestamp);
 
     showDialog(
       context: context,
@@ -157,7 +148,7 @@ class _HomePageState extends State<HomePage> {
               _buildDialogTextField(locationController, 'Location'),
               _buildDialogTextField(tempController, 'Temperature'),
               _buildDialogTextField(humidityController, 'Humidity'),
-              _buildDialogTextField(dateController, 'Date (DD/MM/YYYY)'),
+              _buildDialogTextField(dateController, 'Date (DD/MM/YYYY HH:mm:ss)'),
             ],
           ),
         ),
@@ -169,6 +160,10 @@ class _HomePageState extends State<HomePage> {
               children: [
                 ElevatedButton(
                   onPressed: () {
+                    locationController.dispose();
+                    tempController.dispose();
+                    humidityController.dispose();
+                    dateController.dispose();
                     Navigator.pop(context);
                   },
                   style: ElevatedButton.styleFrom(
@@ -183,15 +178,24 @@ class _HomePageState extends State<HomePage> {
                 ElevatedButton(
                   onPressed: () async {
                     await storage.deleteData(item);
+                    setState(() {
+                      dataList.remove(item);
+                    });
                     final updatedData = SensorData(
                       location: locationController.text,
-                      temperature: tempController.text,
-                      humidity: humidityController.text,
-                      date: dateController.text,
+                      temperature: double.tryParse(tempController.text) ?? 0.0,
+                      humidity: double.tryParse(humidityController.text) ?? 0.0,
+                      timestamp: dateController.text,
                     );
                     await storage.addNewData(updatedData);
+                    setState(() {
+                      dataList.add(updatedData);
+                    });
+                    locationController.dispose();
+                    tempController.dispose();
+                    humidityController.dispose();
+                    dateController.dispose();
                     Navigator.pop(context);
-                    await loadData();
 
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('Дані оновлено')),
@@ -214,24 +218,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  SensorData generateRandomSensorData() {
-    final random = Random();
-    final locations = ['Bin A', 'Bin B', 'Bin C', 'Warehouse', 'Storage 1'];
-    final location = locations[random.nextInt(locations.length)];
-
-    final temperature = (18 + random.nextDouble() * 12).toStringAsFixed(1); // 18.0–30.0 °C
-    final humidity = (40 + random.nextDouble() * 30).toStringAsFixed(1);   // 40–70 %
-    final date = DateTime.now().toString().substring(0, 10); // YYYY-MM-DD
-
-    return SensorData(
-      location: location,
-      temperature: temperature,
-      humidity: humidity,
-      date: date,
-    );
-  }
-
-
   void _showDeleteConfirmationDialog(SensorData item) {
     showDialog(
       context: context,
@@ -247,8 +233,10 @@ class _HomePageState extends State<HomePage> {
           ElevatedButton(
             onPressed: () async {
               await storage.deleteData(item);
+              setState(() {
+                dataList.remove(item);
+              });
               Navigator.pop(context);
-              await loadData();
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Color(0xFFFFBD59),
@@ -276,6 +264,12 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _mqttService.disconnect();
+    super.dispose();
   }
 
   @override

@@ -31,7 +31,7 @@ class LocalStorageService {
     item.location == toDelete.location &&
         item.temperature == toDelete.temperature &&
         item.humidity == toDelete.humidity &&
-        item.date == toDelete.date);
+        item.timestamp == toDelete.timestamp);
     await saveData(data);
   }
 
@@ -41,7 +41,7 @@ class LocalStorageService {
     item.location == oldData.location &&
         item.temperature == oldData.temperature &&
         item.humidity == oldData.humidity &&
-        item.date == oldData.date);
+        item.timestamp == oldData.timestamp);
     if (index != -1) {
       data[index] = newData;
       await saveData(data);
