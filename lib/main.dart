@@ -1,35 +1,40 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'services/auth_service.dart';
 import 'screens/login_page.dart';
+import 'screens/home_page.dart';
 import 'screens/register_page.dart';
 import 'screens/profile_page.dart';
-import 'screens/home_page.dart';
-import 'theme/app_theme.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  final prefs = await SharedPreferences.getInstance();
-  final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
-
-  runApp(GrainDocApp(isLoggedIn: isLoggedIn));
+void main() {
+  runApp(GrainDocApp());
 }
 
 class GrainDocApp extends StatelessWidget {
-  final bool isLoggedIn;
-
-  const GrainDocApp({super.key, required this.isLoggedIn});
+  final AuthService _authService = AuthService();
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'GrainDoc',
-      theme: AppTheme.lightTheme,
-      initialRoute: isLoggedIn ? '/home' : '/',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        primarySwatch: Colors.orange,
+        scaffoldBackgroundColor: Color(0xFFFFFCF6),
+      ),
+      home: FutureBuilder<bool>(
+        future: _authService.isLoggedIn(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          }
+          return snapshot.data == true ? HomePage() : LoginPage();
+        },
+      ),
       routes: {
-        '/': (context) => LoginPage(),
+        '/login': (context) => LoginPage(),
         '/register': (context) => RegisterPage(),
-        '/profile': (context) => ProfilePage(),
         '/home': (context) => HomePage(),
+        '/profile': (context) => ProfilePage(),
       },
     );
   }
