@@ -31,12 +31,11 @@ class _HomePageState extends State<HomePage> {
 
   void _connectToMqtt() async {
     try {
-      print('Connecting to MQTT...');
       await _mqttService.connect();
       if (_mqttService.isConnected) {
-        print('MQTT Connected');
+        print('✅ MQTT Connected');
       } else {
-        print('MQTT connection failed');
+        print('❌ MQTT connection failed');
       }
     } catch (e) {
       print('Error connecting to MQTT: $e');
@@ -45,16 +44,12 @@ class _HomePageState extends State<HomePage> {
 
   void _onDataReceived(SensorData newData) async {
     bool exists = dataList.any((d) =>
-    d.timestamp == newData.timestamp && d.location == newData.location
-    );
+    d.timestamp == newData.timestamp && d.location == newData.location);
     if (!exists) {
       setState(() {
         dataList.add(newData);
       });
       await storage.addNewData(newData);
-      print('New MQTT data added: ${newData.toJson()}');
-    } else {
-      print('MQTT data already exists, skipping');
     }
   }
 
@@ -70,7 +65,6 @@ class _HomePageState extends State<HomePage> {
     return total / dataList.length;
   }
 
-  // Створюємо контролери та не забуваємо їх dispose
   void _showAddDataDialog() {
     final locationController = TextEditingController();
     final tempController = TextEditingController();
@@ -95,11 +89,11 @@ class _HomePageState extends State<HomePage> {
         actions: [
           TextButton(
             onPressed: () {
+              Navigator.pop(context);
               locationController.dispose();
               tempController.dispose();
               humidityController.dispose();
               dateController.dispose();
-              Navigator.pop(context);
             },
             child: Text('Cancel', style: TextStyle(color: Color(0xFF292828))),
           ),
@@ -115,16 +109,63 @@ class _HomePageState extends State<HomePage> {
               setState(() {
                 dataList.add(newData);
               });
+
+              Navigator.pop(context);
               locationController.dispose();
               tempController.dispose();
               humidityController.dispose();
               dateController.dispose();
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Color(0xFFFFBD59)),
+            child: Text('Add', style: TextStyle(color: Color(0xFF292828))),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDialogTextField(TextEditingController controller, String hint) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: TextField(
+        controller: controller,
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: TextStyle(color: Color(0xFF292828)),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          filled: true,
+          fillColor: Colors.white,
+        ),
+      ),
+    );
+  }
+
+  void _showDeleteConfirmationDialog(SensorData item) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Color(0xFFFFFCF6),
+        title: Text('Delete Sensor Data'),
+        content: Text('Are you sure you want to delete this data?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel', style: TextStyle(color: Color(0xFF292828))),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              await storage.deleteData(item);
+              setState(() {
+                dataList.remove(item);
+              });
               Navigator.pop(context);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Color(0xFFFFBD59),
             ),
-            child: Text('Add', style: TextStyle(color: Color(0xFF292828))),
+            child: Text('Delete', style: TextStyle(color: Color(0xFF292828))),
           ),
         ],
       ),
@@ -160,11 +201,11 @@ class _HomePageState extends State<HomePage> {
               children: [
                 ElevatedButton(
                   onPressed: () {
+                    Navigator.pop(context);
                     locationController.dispose();
                     tempController.dispose();
                     humidityController.dispose();
                     dateController.dispose();
-                    Navigator.pop(context);
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.grey,
@@ -181,6 +222,7 @@ class _HomePageState extends State<HomePage> {
                     setState(() {
                       dataList.remove(item);
                     });
+
                     final updatedData = SensorData(
                       location: locationController.text,
                       temperature: double.tryParse(tempController.text) ?? 0.0,
@@ -191,11 +233,12 @@ class _HomePageState extends State<HomePage> {
                     setState(() {
                       dataList.add(updatedData);
                     });
+
+                    Navigator.pop(context);
                     locationController.dispose();
                     tempController.dispose();
                     humidityController.dispose();
                     dateController.dispose();
-                    Navigator.pop(context);
 
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('Дані оновлено')),
@@ -214,54 +257,6 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  void _showDeleteConfirmationDialog(SensorData item) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Color(0xFFFFFCF6),
-        title: Text('Delete Sensor Data'),
-        content: Text('Are you sure you want to delete this data?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel', style: TextStyle(color: Color(0xFF292828))),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              await storage.deleteData(item);
-              setState(() {
-                dataList.remove(item);
-              });
-              Navigator.pop(context);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFFFFBD59),
-            ),
-            child: Text('Delete', style: TextStyle(color: Color(0xFF292828))),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDialogTextField(TextEditingController controller, String hint) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: TextField(
-        controller: controller,
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: TextStyle(color: Color(0xFF292828)),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(15),
-          ),
-          filled: true,
-          fillColor: Colors.white,
-        ),
       ),
     );
   }
@@ -339,17 +334,47 @@ class _HomePageState extends State<HomePage> {
           ),
           Padding(
             padding: EdgeInsets.all(20),
-            child: ElevatedButton(
-              onPressed: _showAddDataDialog,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFFFFBD59),
-                padding: EdgeInsets.symmetric(vertical: 15, horizontal: 40),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+            child: Column(
+              children: [
+                ElevatedButton(
+                  onPressed: _showAddDataDialog,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFFFFBD59),
+                    padding: EdgeInsets.symmetric(vertical: 15, horizontal: 40),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  child: Text('Add New Data', style: TextStyle(color: Color(0xFF292828))),
                 ),
-                textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              child: Text('Add New Data', style: TextStyle(color: Color(0xFF292828))),
+                const SizedBox(height: 10),
+                ElevatedButton.icon(
+                  onPressed: () => Navigator.pushNamed(context, '/qr'),
+                  icon: Icon(Icons.qr_code_scanner, color: Color(0xFF292828)),
+                  label: Text('Scanner QR', style: TextStyle(color: Color(0xFF292828))),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFFE7E7E7),
+                    padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                ElevatedButton.icon(
+                  onPressed: () => Navigator.pushNamed(context, '/saved'),
+                  icon: Icon(Icons.save, color: Color(0xFF292828)),
+                  label: Text('View message', style: TextStyle(color: Color(0xFF292828))),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFFE7E7E7),
+                    padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],

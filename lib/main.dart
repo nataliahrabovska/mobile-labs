@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:test_lab2/screens/scanner/qr_scanner_screen.dart' as qr;
+import 'package:test_lab2/screens/scanner/saved_qr_screen.dart' as saved;
+
 import 'services/auth_service.dart';
 import 'screens/login_page.dart';
 import 'screens/home_page.dart';
@@ -35,6 +38,8 @@ class GrainDocApp extends StatelessWidget {
         '/register': (context) => RegisterPage(),
         '/home': (context) => HomePage(),
         '/profile': (context) => ProfilePage(),
+        '/qr': (context) => qr.QRScannerScreen(),
+        '/saved': (context) => saved.SavedQrScreen(),
       },
     );
   }
