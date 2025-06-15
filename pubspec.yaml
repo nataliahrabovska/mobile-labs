@@ -5,7 +5,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: ">=3.7.2 <4.0.0"
+  sdk: ">=3.5.4 <4.0.0"
 
 dependencies:
   flutter:
@@ -13,6 +13,10 @@ dependencies:
   mqtt_client: ^10.0.0
   connectivity_plus: ^4.0.1
   shared_preferences: ^2.2.2
+  usb_serial: ^0.5.2
+  mobile_scanner: ^6.0.10
+  rxdart: ^0.28.0
+
 
 dev_dependencies:
   flutter_test:
